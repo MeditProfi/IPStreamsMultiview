@@ -1,0 +1,338 @@
+#!/usr/bin/perl
+
+use Modern::Perl;
+
+use CGI::Fast qw(:standard);
+use LWP::UserAgent;
+use XML::Ximple qw(parse_xml ximple_to_string);
+use Fcntl;
+use JSON::XS;
+use FindBin qw($Bin);
+
+use MLDBM::Sync;
+use MLDBM qw(MLDBM::Sync::SDBM_File Storable);
+
+use constant DEFAULT_TIMEOUT => 1;
+use constant OUT_OF_SPACE_SLOT => -1;
+
+my %RTMP_DATA = ();
+my %PARAMS;
+my %CONFIG;
+my $UA;
+
+my %DB;
+my $DBh;
+
+init();
+run();
+
+sub init {
+	read_config();
+	$UA = LWP::UserAgent->new(cookie_jar => {});
+	$DBh = tie %DB, 'MLDBM::Sync', "$Bin/.mspproxy.db", O_CREAT|O_RDWR, 0640
+		or die "Can't tie database: $!";
+}
+
+sub read_config {
+	my $JSON = new JSON::XS;
+	if(open F, "$Bin/mspproxy-config.json") {
+		my $data = join('', <F>);
+		close F;
+		%CONFIG = %{$JSON->decode($data)};
+	}
+}
+
+sub run {
+        my $req;
+        while($req = new CGI::Fast) {
+		my $output;
+		eval {
+			get_params($req);
+			get_and_parse_rtmp_data();
+			assign_slots();
+			$output = format_rtmp_data();
+		};
+		if($@) {
+			print_error_header();
+			print "ERROR: $@";
+			next;
+		}
+		print_success_header();
+		print $output;
+	}
+}
+
+sub get_params {
+	my $req = shift;
+	my $params = $req->Vars;
+	%PARAMS = ();
+	my $access_token = $req->cookie('access_token');
+	$PARAMS{access_token} = $access_token
+		if $access_token;
+}
+
+sub print_success_header {
+	print header(-type => 'text/xml',
+			-exprires => 'now',
+			-charset => 'utf-8',
+	);
+}
+
+sub print_error_header {
+	print header(-status => 500);
+}
+
+sub get_and_parse_rtmp_data {
+	%RTMP_DATA = ();
+	$UA->cookie_jar->set_cookie('', 'access_token', $PARAMS{access_token}, '/');
+	for my $addr (keys %{$CONFIG{Servers}}) {
+		my $srv_data = $CONFIG{Servers}{$addr};
+		my $protocol = $srv_data->{Protocol} // 'http';
+		my $stat_addr = "$protocol://$addr/$srv_data->{Stat}";
+		$UA->timeout($srv_data->{Timeout} // DEFAULT_TIMEOUT);
+		my $result = $UA->get($stat_addr);
+		if(!$result->is_success) {
+			print STDERR "Can't get stat from $stat_addr: " . $result->status_line;
+			next;
+		}
+		my $content = $result->decoded_content;
+		my $srv_streams = parse_rtmp_data({server_addr => $addr, content => $content});
+		next
+			unless %$srv_streams;
+		update_server_data($addr, $srv_streams);
+	}
+}
+
+sub assign_slots {
+	$DBh->Lock();
+	_cleanup_db();
+	for my $srv_addr (keys %RTMP_DATA) {
+		_assign_app_slots($srv_addr);
+	}
+	$DBh->UnLock();
+}
+
+sub _assign_app_slots {
+	my $srv_addr = shift;
+
+	my $apps = $RTMP_DATA{$srv_addr};
+	for my $app_id (keys %$apps) {
+		_assign_stream_slots($srv_addr, $app_id);
+	}
+}
+
+sub _assign_stream_slots {
+	my ($srv_addr, $app_id) = @_;
+
+	my $app = $RTMP_DATA{$srv_addr}{$app_id};
+	for my $stream_name (keys %$app) {
+		my $slot = $DB{streams}{"$srv_addr/$app_id/$stream_name"} //
+			_assign_new_slot({srv => $srv_addr, app => $app_id, stream => $stream_name});
+		push @{$app->{$stream_name}}, {tag_name => 'slot', content => [ $slot ]};
+	}
+}
+
+sub _assign_new_slot {
+	my $key = shift;
+	my $slot = _get_explicit_slot($key) // _get_next_free_slot($key);
+	return $slot
+		if $slot == OUT_OF_SPACE_SLOT;
+	my $streams = $DB{streams};
+	$streams->{"$key->{srv}/$key->{app}/$key->{stream}"} = $slot;
+	$DB{streams} = $streams;
+	my $busy_slots = $DB{busy_slots};
+	$busy_slots->{$slot} = 1;
+	$DB{busy_slots} = $busy_slots;
+	return $slot;
+}
+
+sub _get_explicit_slot {
+	my $key = shift;
+	my $streams_map = $CONFIG{Servers}{$key->{srv}}{Apps}{$key->{app}}{Streams};
+	return undef
+		unless $streams_map;
+	return $streams_map->{$key->{stream}};
+}
+
+sub _get_next_free_slot {
+	my $key = shift;
+	my $zone = _get_stream_zone($key);
+	my $zone_info = $CONFIG{Zones}{$zone};
+	for my $slot_info (@{$zone_info->{Slots}}) {
+		my $slot = $slot_info->{Pos};
+		return $slot
+			unless $DB{busy_slots}{$slot};
+	}
+	return OUT_OF_SPACE_SLOT;
+}
+
+sub _cleanup_db {
+	my @db_keys = keys %{$DB{streams}};
+	for my $key (@db_keys) {
+		my ($srv_addr, $app_id, $stream_name) = split('/', $key);
+		next
+			if defined($RTMP_DATA{$srv_addr}) and
+				defined($RTMP_DATA{$srv_addr}{$app_id}) and 
+				defined($RTMP_DATA{$srv_addr}{$app_id}{$stream_name});
+		my $slot = $DB{streams}{$key};
+		my $streams = $DB{streams};
+		delete $streams->{$key};
+		$DB{streams} = $streams;
+		my $busy_slots = $DB{busy_slots};
+		delete $busy_slots->{$slot};
+		$DB{busy_slots} = $busy_slots;
+	}
+}
+
+sub format_rtmp_data {
+	my $rtmp_data_as_ximple_tree = rtmp_data_as_ximple_tree();
+	return '<?xml version="1.0" encoding="utf-8" ?>' . ximple_to_string($rtmp_data_as_ximple_tree);
+}
+
+sub parse_rtmp_data {
+	my $params = shift;
+	my ($server_addr, $text_data) = ($params->{server_addr}, $params->{content});
+	my %rtmp_data = ();
+	my $applications = find_by_tag_name({xml_tree => {content => parse_xml($text_data)}, tag_name => 'application'});
+	for my $app (@$applications) {
+		my $name_node = find_by_tag_name({xml_tree => $app, tag_name => 'name'}, find_first => 1, no_recursion => 1)->[0];
+		my $app_name = get_node_value($name_node);
+		next
+			if is_unknown_app({srv => $server_addr, app => $app_name});
+		my %app_data = ();
+		my $streams = find_by_tag_name({xml_tree => $app, tag_name => 'stream'});
+		for my $stream (@$streams) {
+			my $is_active = find_by_tag_name({xml_tree => $stream, tag_name => 'active'});
+			next
+				unless @$is_active;
+			my $stream_data = [];
+			my $stream_name = '';
+			for my $tag_name ('name', 'time', 'publishing') {
+				my $node = find_by_tag_name({xml_tree => $stream, tag_name => $tag_name, find_first => 1}, no_recursion => 1)->[0];
+				next
+					unless $node;
+				push @$stream_data, $node;
+				$stream_name = get_node_value($node)
+					if $tag_name eq 'name';
+			}
+			next
+				if is_unknown_stream({srv => $server_addr, app => $app_name, stream => $stream_name});
+			$app_data{$stream_name} = $stream_data;
+		}
+		next
+			unless %app_data;
+		$rtmp_data{$app_name} = \%app_data
+	}
+	return \%rtmp_data;
+}
+
+sub is_unknown_app {
+	my $key = shift;
+	my $server_apps_config = $CONFIG{Servers}{$key->{srv}}{Apps};
+	return defined($server_apps_config->{$key->{app}}) ? 0 : 1;
+}
+
+sub is_unknown_stream {
+	my $key = shift;
+	my $app_streams_config = $CONFIG{Servers}{$key->{srv}}{Apps}{$key->{app}}{Streams};
+	return (defined($app_streams_config->{$key->{stream}}) ? 0 : 1)
+		if defined($app_streams_config);
+	my $zone = _get_stream_zone($key);
+	my $zone_info = $CONFIG{Zones}{$zone};
+	return ($zone_info and $zone_info->{Slots}) ? 0 : 1;
+}
+
+sub _get_stream_zone {
+	my $key = shift;
+	return $CONFIG{Servers}{$key->{srv}}{Apps}{$key->{app}}{Zone};
+}
+
+sub rtmp_data_as_ximple_tree {
+	my %application_nodes = ();
+	my @server_nodes = ();
+	for my $server_addr (keys %RTMP_DATA) {
+		push @server_nodes, {
+			tag_name => 'server', attrib => {addr => $server_addr},
+			content => get_application_nodes($RTMP_DATA{$server_addr})
+		};
+	}
+	my $rtmp_node = {tag_name => 'rtmp', content => \@server_nodes};
+	return [$rtmp_node];
+}
+
+sub get_application_nodes {
+	my $app_data = shift;
+	my %app_nodes = ();
+	for my $app_name (keys %$app_data) {
+		my $live_node;
+		if(!defined($app_nodes{$app_name})) {
+			my $app_name_node = {tag_name => 'name', content => [ $app_name ]};
+			$live_node = {tag_name => 'live', content => []}; 
+			$app_nodes{$app_name} = {tag_name => 'application', content => [$app_name_node, $live_node]}
+		} else {
+			$live_node = $app_nodes{$app_name}{content}[1];
+		}
+		for my $stream_data (values %{$app_data->{$app_name}}) {
+			push @{$live_node->{content}}, {tag_name => 'stream', content => $stream_data};
+		}
+	}
+	my @res = ();
+	for my $app_node (values %app_nodes) {
+		push @res, $app_node
+			if @{$app_node->{content}[1]{content}};
+	}
+	return \@res;
+}
+
+sub find_by_tag_name {
+	my $params = shift;
+
+	my $xml_tree = $params->{xml_tree};
+	my $tag_name = $params->{tag_name};
+	my $find_first = $params->{find_first};
+	my $stop_recursion = $params->{no_recursion} // 0;
+
+	my $content = $xml_tree->{content};
+	return ''
+		unless defined($content) and ref($content) eq 'ARRAY';
+
+	my @res = ();
+	for my $subtree (@$content) {
+		next
+			unless ref($subtree) eq 'HASH';
+		my $current_tag_name = $subtree->{tag_name};
+		if($current_tag_name eq $tag_name) {
+			push @res, $subtree;
+			$stop_recursion = 1;
+		} elsif(!$stop_recursion) {
+			my $subtree_content = find_by_tag_name({xml_tree => $subtree, tag_name => $tag_name, find_first => $find_first});
+			next
+				unless $subtree_content;
+			push @res, @$subtree_content;
+		}
+		last
+			if $find_first and scalar(@res) >= 1;
+	}
+	return \@res;
+}
+
+sub get_node_value {
+	my $node = shift;
+	return ref($node->{content})  eq 'ARRAY' ? join('', @{$node->{content}}) : $node->{content};
+}
+
+sub update_server_data {
+	my $server_addr = shift;
+	my $new_data = shift;
+
+	my $current_data = $RTMP_DATA{$server_addr} // {};
+	for my $app_id (keys %$new_data) {
+		$current_data->{$app_id} = {}
+			unless defined($current_data->{$app_id});
+		for my $stream_id (keys %{$new_data->{$app_id}}) {
+			$current_data->{$app_id}{$stream_id} = $new_data->{$app_id}{$stream_id};
+		}
+	}
+
+	$RTMP_DATA{$server_addr} = $current_data;
+}

@@ -1,0 +1,15 @@
+html { padding: 0; margin: 0 }
+body { padding: 0; margin: 0; box-sizing: border-box; overflow: hidden; min-width: 1920px; min-height: 1080px; background-color: #777; }
+body.table-view { padding: 5px; background-color: white; }
+
+#msp-container { font: 28px tahoma; letter-spacing: 3px; color: #ccc; text-align: center; vertical-align: bottom; background-color: #777; }
+body.table-view #msp-container { font: 20px tahoma; letter-spacing: 1px; background-color: white; text-align: left; }
+.not-authorized-banner { font-size: 20px; width: 100%; text-align: center }
+.player-container { width: 480px; height: 346px; background-image: url('../img/mv.png'); background-repeat: no-repeat; float: left; }
+.player-container div:first-child { margin-left: 8px; margin-top: 8px; width: 464px; height: 261px; }
+.player-container a { color: inherit; text-decoration: none; }
+.stream-info, .stream-title { font-size: 24px; padding-top: 1px; height: 28px; border: 3px solid transparent; border-radius: 11px; background-clip: content-box; }
+.stream-title.black-text { color: black; }
+.stream-title { margin: 2px 79px 0px 79px; }
+.stream-info { margin: 2px 40px 0px 40px; }
+.common-info { width: 100%; height: 42px; background-color: black; float: left;}

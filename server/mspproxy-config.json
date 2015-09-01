@@ -1,0 +1,95 @@
+{
+  "Servers" : {
+    "192.168.181.39" : {
+      "Port" : 1935,
+      "Stat" : "/mvw/stat_raw",
+      "RelayAddr" : "192.168.181.39",
+      "Protocol" : "http",
+      "Timeout" : 1,
+      "Apps" : {
+        "pool" : {
+          "Zone" : "Pool"
+        },
+        "sdi" : {
+          "Zone" : "SDI",
+          "Streams" : { "1" : 1, "2" : 2, "3" : 3, "4" : 4 }
+        }
+      }
+    },
+    "test.rtmp.meditprofi.clustertech.ru" : {
+      "Stat" : "/stat",
+      "Apps" : {
+        "test" : {
+          "Zone" : "Pool",
+          "Prefix" : "EXT"
+        },
+        "common" : {
+          "Zone" : "Line",
+          "Streams" : {
+            "LN-1" : 13,
+            "LN-2" : 14,
+            "LN-3" : 15,
+            "LN-4" : 16,
+            "LN-5" : 17,
+            "LN-6" : 18,
+            "LN-7" : 19,
+            "LN-8" : 20,
+            "LN-9" : 21,
+            "LN-10" : 22,
+            "LN-11" : 23,
+            "LN-12" : 24
+          }
+        }
+      }
+    }
+  },
+  "Zones" : {
+    "SDI" : {
+      "Color" : "#8DD9BF",
+      "Class" : "black-text",
+      "Slots" : [
+        { "Pos": 1, "Name": "cam-1" },
+        { "Pos": 2, "Name": "cam-2" },
+        { "Pos": 3, "Name": "cam-3" },
+        { "Pos": 4, "Name": "cam-4" }
+      ]
+    },
+    "Pool" : {
+      "Color" : "#FFDFA8",
+      "Class" : "black-text",
+      "Slots" : [
+        { "Pos": 5,  "Name": "ext-1"},
+        { "Pos": 6,  "Name": "ext-2"},
+        { "Pos": 7,  "Name": "ext-3"},
+        { "Pos": 8,  "Name": "ext-4"},
+        { "Pos": 9,  "Name": "ext-5"},
+        { "Pos": 10,  "Name": "ext-6"},
+        { "Pos": 11,  "Name": "ext-7"},
+        { "Pos": 12,  "Name": "ext-8"}
+      ]
+    },
+    "Line" : {
+      "Color" : "#CCCCCC",
+      "Class" : "black-text",
+      "Slots" : [
+        { "Pos": 13, "Name" : "LN-1" },
+        { "Pos": 14, "Name" : "LN-2" },
+        { "Pos": 15, "Name" : "ТЖК-LN-3" },
+        { "Pos": 16, "Name" : "LN-4" },
+        { "Pos": 17, "Name" : "LN-5" },
+        { "Pos": 18, "Name" : "LN-6" },
+        { "Pos": 19, "Name" : "LN-7" },
+        { "Pos": 20, "Name" : "LN-8" },
+        { "Pos": 21, "Name" : "LN-9" },
+        { "Pos": 22, "Name" : "LN-10" },
+        { "Pos": 23, "Name" : "LN-11" },
+        { "Pos": 24, "Name" : "LN-12" }
+      ]
+    }
+  },
+  "Client" : {
+    "PagesNumber" : 2,
+    "StreamsInfoAddr" : "/mv/stat",
+    "DefaultStreamerAddr" : "192.168.181.39"
+  }
+}
