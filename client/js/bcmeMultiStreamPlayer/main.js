@@ -12,6 +12,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	var ComponentContainer;
 	var RequestInProgress = false;
 	var Players = {};
+	var BackgroundPlayers = {};
 	var URI_PARAMS = {
 			"mode" : "multiscreen",
 			"page" : DEFAULT_PAGE
@@ -131,14 +132,16 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 				'<div class="stream-info"></div>' +
 				'<div class="stream-title"></div>' +
 			'</div>');
-		if(Slots[idx] && config.Zones[Slots[idx].zone]) {
-			var zoneInfo = config.Zones[Slots[idx].zone];
-			var titleContainer = playerContainer.children(".stream-title");
-			titleContainer.css({"background-color": zoneInfo.Color});
-			titleContainer.addClass(zoneInfo.Class);
-			titleContainer.html('<a href="#">' + Slots[idx].name + '</a>');
-		}
 		ComponentContainer.append(playerContainer);
+		if(!(Slots[idx] && config.Zones[Slots[idx].zone]))
+			return;
+		var zoneInfo = config.Zones[Slots[idx].zone];
+		var titleContainer = playerContainer.children(".stream-title");
+		titleContainer.css({"background-color": zoneInfo.Color});
+		titleContainer.addClass(zoneInfo.Class);
+		titleContainer.html('<a href="#">' + Slots[idx].name + '</a>');
+		if(zoneInfo.BackgroundStream)
+			startBackgroundPlayer({slotIdx: idx, container: playerContainer, stream: zoneInfo.BackgroundStream});
 	}
 
 	function startUpdating() { setInterval(getStreamsInfo, (config.Client.UpdateInterval || DEFAULT_UPDATE_INTERVAL) * 1000) }
@@ -315,7 +318,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 				return true;
 			if(newStreams[streamURL] != undefined)
 				return true;
-			stopAndRemovePlayer(streamURL);
+			stopAndRemovePlayerFromSlot(idx);
 			delete Slots[idx].stream;
 		});
 	}
@@ -341,6 +344,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 			var container = getContainerByIdx(selectedIdx);
 			if(container.length === 0)
 				return true;
+			stopBackgroundPlayer({container: container, slotIdx: selectedIdx});
 			createAndStartPlayer({"container": container, "stream": stream});
 		});
 	}
@@ -356,7 +360,9 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 		return $(getAllPlayerContainers()[idx - FirstPageIdx]);
 	}
 
-	function stopAndRemovePlayer(streamURL) {
+	function stopAndRemovePlayerFromSlot(idx) {
+		var slot = Slots[idx];
+		var streamURL = slot.stream;
 		var container = getPlayerContainerByURL(streamURL);
 		if(container.length === 0)
 			return;
@@ -364,6 +370,21 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 		container.removeData("bcme-msp-stream-url");
 		delete Players[streamURL];
 		setStreamTitle({"container": container, "stream": {"name": ""}});
+		var zoneInfo = config.Zones[slot.zone];
+		if(zoneInfo && zoneInfo.BackgroundStream)
+				startBackgroundPlayer({slotIdx: idx, container: container, stream: zoneInfo.BackgroundStream});
+	}
+
+	function startBackgroundPlayer(params) {
+		var player = createPlayer(params);
+		BackgroundPlayers[params.slotIdx] = player;
+		player.play();
+	}
+
+	function stopBackgroundPlayer(params) {
+		var idx = params.slotIdx;
+		removePlayer({container: params.container, player: BackgroundPlayers[idx]});
+		delete BackgroundPlayers[idx];	
 	}
 
 	function getPlayerContainerByURL(streamURL) {
@@ -423,7 +444,8 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	}
 
 	function _auth_protected_url(stream) {
-		var streamConfig = config.Servers[stream.server].Apps[stream.app];
+		var streamConfig = config.Servers[stream.server] ? 
+			config.Servers[stream.server].Apps[stream.app] : undefined;
 		return (streamConfig && streamConfig.NoAuth) ?
 				"rtmp://" + stream.url :
 				"rtmp://" + stream.url + "?authmod=token&token=" + Token;

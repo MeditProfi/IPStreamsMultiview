@@ -27,17 +27,7 @@
           "Zone" : "Line",
           "Streams" : {
             "LN-1" : 13,
-            "LN-2" : 14,
-            "LN-3" : 15,
-            "LN-4" : 16,
-            "LN-5" : 17,
-            "LN-6" : 18,
-            "LN-7" : 19,
-            "LN-8" : 20,
-            "LN-9" : 21,
-            "LN-10" : 22,
-            "LN-11" : 23,
-            "LN-12" : 24
+            "LN-2" : 14
           }
         }
       }
@@ -73,18 +63,12 @@
       "Class" : "black-text",
       "Slots" : [
         { "Pos": 13, "Name" : "LN-1" },
-        { "Pos": 14, "Name" : "LN-2" },
-        { "Pos": 15, "Name" : "ТЖК-LN-3" },
-        { "Pos": 16, "Name" : "LN-4" },
-        { "Pos": 17, "Name" : "LN-5" },
-        { "Pos": 18, "Name" : "LN-6" },
-        { "Pos": 19, "Name" : "LN-7" },
-        { "Pos": 20, "Name" : "LN-8" },
-        { "Pos": 21, "Name" : "LN-9" },
-        { "Pos": 22, "Name" : "LN-10" },
-        { "Pos": 23, "Name" : "LN-11" },
-        { "Pos": 24, "Name" : "LN-12" }
-      ]
+        { "Pos": 14, "Name" : "LN-2" }
+      ],
+      "BackgroundStream" : {
+        "url" : "test.rtmp.meditprofi.clustertech.ru:1935/test",
+        "name" : "1"
+      }
     }
   },
   "Client" : {
