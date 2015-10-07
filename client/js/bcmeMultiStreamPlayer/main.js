@@ -5,8 +5,8 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	var DEFAULT_PAGE = 1;
 	var DEFAULT_PAGES_NUMBER = 1;
 	var DEFAULT_UPDATE_INTERVAL = 2;
-	var DEFAULT_FULLSCREEEN_RESOLUTION_X = 1920;
-	var DEFAULT_FULLSCREEEN_RESOLUTION_Y = 1080;
+	var DEFAULT_FULLSCREEN_RESOLUTION_X = 1920;
+	var DEFAULT_FULLSCREEN_RESOLUTION_Y = 1080;
 
 	var Token;
 	var ComponentContainer;
@@ -123,7 +123,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 
 	function _getConfigFullscreenResolution() {
 		var res = config.Client.FullScreenResolution;
-		return { X : (res && res.X) ? res.X : DEFAULT_FULLSCREEN_RESOLUTON_X, Y : (res && res.Y) ? res.Y : DEFAULT_FULLSCREEN_RESOLUTION_Y }
+		return { X : (res && res.X) ? res.X : DEFAULT_FULLSCREEN_RESOLUTION_X, Y : (res && res.Y) ? res.Y : DEFAULT_FULLSCREEN_RESOLUTION_Y }
 	}
 
 	function addPlayerContainer(idx) {
