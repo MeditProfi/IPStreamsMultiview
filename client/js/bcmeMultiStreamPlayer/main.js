@@ -13,6 +13,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	var RequestInProgress = false;
 	var Players = {};
 	var BackgroundPlayers = {};
+	var Streams = {};
 	var URI_PARAMS = {
 			"mode" : "multiscreen",
 			"page" : DEFAULT_PAGE
@@ -228,7 +229,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	}
 
 	function shouldShowStream(stream) {
-		return (config.Zones[stream.zone] === undefined) ? 0 : 1;
+		return (stream.isRedirected || config.Zones[stream.zone] === undefined) ? 0 : 1;
 	}
 
 	function createStreamLinkElement(stream) {
@@ -254,9 +255,11 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 				stream.zone = (streamConfig && streamConfig.Zone) ? streamConfig.Zone : '';
 				stream.server = addr;
 				stream.fullURL = _makeFullURL(stream);
+				stream.isRedirected = stream.name.match(/\@/);
 				streams[stream.fullURL] = stream;
 			});
 		});
+		Streams = streams;
 		return streams;
 	}
 
@@ -329,6 +332,8 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 
 	function openPlayersForNewStreams(newStreams) {
 		jQuery.each(newStreams, function(streamURL, stream) {
+			if(!shouldShowStream(stream))
+				return;
 			if(isActive(streamURL))
 				return true;
 			var selectedIdx = getNewStreamContainerIdx(stream);
@@ -369,7 +374,9 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 		removePlayer({container: container, player: Players[streamURL]});
 		container.removeData("bcme-msp-stream-url");
 		delete Players[streamURL];
-		setStreamTitle({"container": container, "stream": {"name": ""}});
+		var data = {"container": container, "stream": {"name": ""}};
+		setStreamTitle(data);
+		setStreamControls(data);
 		var zoneInfo = config.Zones[slot.zone];
 		if(zoneInfo && zoneInfo.BackgroundStream)
 				startBackgroundPlayer({slotIdx: idx, container: container, stream: zoneInfo.BackgroundStream});
@@ -417,6 +424,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 		Players[streamURL] = player;
 		params.container.data("bcme-msp-stream-url", streamURL);
 		setStreamTitle(params);
+		setStreamControls(params);
 		player.play();
 	}
 
@@ -453,14 +461,74 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 
 	function setStreamTitle(params) {
 		var titleContainerLink = params.container.find(".stream-title").find('a');
-		var infoContainer = params.container.find(".stream-info");
 		var stream = params.stream;
 		if(stream.name === "") {
 			titleContainerLink.prop('href', '#');
-			infoContainer.text(stream.name);
 			return;
 		}
 		titleContainerLink.prop('href', makeFullscreenURLLink(stream));
+	}
+
+	function setStreamControls(params) {
+		var infoContainer = params.container.find(".stream-info");
+		var stream = params.stream;
+		if(stream.name === "") {
+			infoContainer.empty();
+			return;
+		}
+		var appConfig = config.Servers[stream.server].Apps[stream.app];
+		if(!appConfig)
+			return;
+		var sharingConfig = config.Client.Sharing;
+		if(!sharingConfig)
+			return;
+		var shareData = {};
+		var originalStream;
+		if(appConfig.Shareable)
+			shareData = {operation: shareStream, label: '+ ' + sharingConfig.Label, stream: stream}
+		else if(sharingConfig.CommonApp === stream.app && (originalStream = getOriginalStream(stream)))
+			shareData = {operation: unShareStream, label: '- ' + sharingConfig.Label, stream: originalStream}
+		else
+			return;
+		var shareElement = $('<a href="#">' + shareData.label + '</a>');
+		shareElement.on('click', shareData, shareData.operation);
+		return infoContainer.append(shareElement);
+	}
+
+	function getOriginalStream(stream) {
+		var originalStream = undefined;
+		$.each(Streams, function(url, testStream) {
+			if(testStream.isRedirected && (testStream.name === (stream.name + '@' + stream.app))) {
+				originalStream = testStream;
+				return false;
+			}
+		});
+		return originalStream;
+	}
+
+	function shareStream(evt) {
+		var data = evt.data;
+		var stream = data.stream;
+		var sharingConfig = config.Client.Sharing;
+		if(sharingConfig === undefined)
+			return;
+		var controlUrl = sharingConfig.ControlURL;
+		var commonApp = sharingConfig.CommonApp;
+		var streamName = stream.name;
+		var streamApp = stream.app;
+		$.get(controlUrl + '/redirect/publisher?app=' + streamApp + '&name=' + streamName + '&newname=' + streamName + "@" + commonApp);
+	}
+
+	function unShareStream(evt) {
+		var data = evt.data;
+		var stream = data.stream;
+		var sharingConfig = config.Client.Sharing;
+		if(sharingConfig === undefined)
+			return;
+		var controlUrl = sharingConfig.ControlURL;
+		var streamName = stream.name;
+		var streamApp = stream.app;
+		$.get(controlUrl + '/redirect/publisher?app=' + streamApp + '&name=' + streamName + '&newname=' + streamName.replace(/\@.+$/, ''));
 	}
 
 	function makeFullscreenURLLink(stream) {

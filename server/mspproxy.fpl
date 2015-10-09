@@ -7,6 +7,7 @@ use LWP::UserAgent;
 use XML::Ximple qw(parse_xml ximple_to_string);
 use Fcntl;
 use JSON::XS;
+use URI::Escape;
 use FindBin qw($Bin);
 
 use MLDBM::Sync;
@@ -47,19 +48,43 @@ sub run {
         while($req = new CGI::Fast) {
 		my $output;
 		eval {
-			get_params($req);
-			get_and_parse_rtmp_data();
-			assign_slots();
-			$output = format_rtmp_data();
+			my $action = $req->url_param('action') // '';
+			my $output;
+			if($action eq 'publish') {
+				$output = process_rtmp_onpublish_request($req);
+			} else {
+				$output = process_rtmp_data_request($req);
+			}
+			print $output;
 		};
 		if($@) {
-			print_error_header();
+			print error_header();
 			print "ERROR: $@";
 			next;
 		}
-		print_success_header();
-		print $output;
 	}
+}
+
+sub process_rtmp_onpublish_request {
+	my $req = shift;
+
+	my $name = uri_unescape(scalar($req->param('name')));
+	return $req->header
+		unless ($name =~ s/\@(\w+)$//);
+
+	my $new_app = $1;
+	my $app = $req->param('app');
+	my $tcurl = $req->param('tcurl');
+	$tcurl =~ s|/$app$|/$new_app|;
+	return $req->redirect(-uri => "$tcurl/$name", -status=>'301 Moved Permanently');
+}
+
+sub process_rtmp_data_request {
+	my $req = shift;
+	get_params($req);
+	get_and_parse_rtmp_data();
+	assign_slots();
+	return success_header() . format_rtmp_data();
 }
 
 sub get_params {
@@ -71,15 +96,15 @@ sub get_params {
 		if $access_token;
 }
 
-sub print_success_header {
-	print header(-type => 'text/xml',
+sub success_header {
+	return header(-type => 'text/xml',
 			-exprires => 'now',
 			-charset => 'utf-8',
 	);
 }
 
-sub print_error_header {
-	print header(-status => 500);
+sub error_header {
+	return header(-status => 500);
 }
 
 sub get_and_parse_rtmp_data {
@@ -234,8 +259,10 @@ sub is_unknown_app {
 
 sub is_unknown_stream {
 	my $key = shift;
-	my $app_streams_config = $CONFIG{Servers}{$key->{srv}}{Apps}{$key->{app}}{Streams};
-	return (defined($app_streams_config->{$key->{stream}}) ? 0 : 1)
+	my ($srv, $app, $stream) = ($key->{srv}, $key->{app}, $key->{stream});
+	$stream =~ s/\@.+$//;
+	my $app_streams_config = $CONFIG{Servers}{$srv}{Apps}{$app}{Streams};
+	return (defined($app_streams_config->{$stream}) ? 0 : 1)
 		if defined($app_streams_config);
 	my $zone = _get_stream_zone($key);
 	my $zone_info = $CONFIG{Zones}{$zone};

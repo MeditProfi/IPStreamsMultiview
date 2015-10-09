@@ -11,7 +11,7 @@
           "Zone" : "Pool"
         },
         "sdi" : {
-          "Zone" : "SDI",
+          "Zone" : "Line",
           "Streams" : { "1" : 1, "2" : 2, "3" : 3, "4" : 4 }
         }
       }
@@ -19,15 +19,18 @@
     "test.rtmp.meditprofi.clustertech.ru" : {
       "Stat" : "/stat",
       "Apps" : {
-        "test" : {
+        "common" : {
           "Zone" : "Pool",
           "Prefix" : "EXT"
         },
-        "common" : {
-          "Zone" : "Line",
+        "test" : {
+          "Zone" : "SDI",
+          "Shareable" : true,
           "Streams" : {
-            "LN-1" : 13,
-            "LN-2" : 14
+            "1" : 1,
+            "2" : 2,
+            "3" : 3,
+            "4" : 4
           }
         }
       }
@@ -73,7 +76,12 @@
   },
   "Client" : {
     "PagesNumber" : 2,
-    "StreamsInfoAddr" : "/mv/stat",
-    "DefaultStreamerAddr" : "192.168.181.39"
+    "StreamsInfoAddr" : "/mvw/stat",
+    "DefaultStreamerAddr" : "192.168.181.39",
+    "Sharing" : {
+      "ControlURL" : "/rtmp_control",
+      "CommonApp" : "common",
+      "Label" : "МСК"
+    }
   }
 }
