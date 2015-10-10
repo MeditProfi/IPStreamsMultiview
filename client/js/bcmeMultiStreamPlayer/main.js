@@ -175,6 +175,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	}
 
 	function updatePlayers(streams) {
+		updateSlotsState(streams);
 		closeInactivePlayers(streams);
 		openPlayersForNewStreams(streams);
 	}
@@ -303,13 +304,33 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 		var name = streamObject.find("name").text();
 		var time = streamObject.find("time").text();
 		var slotNode = streamObject.find("slot");
-		var slot = (slotNode.length > 0) ? slotNode.text() : undefined;
+		var slotData = (slotNode.length > 0) ?
+			{idx: slotNode.text(), isSelected: slotNode.attr('selected'), isOnAir: slotNode.attr('onair')} :
+			{idx: undefined, isSelected: false, isOnAir: false}
 		return {
 			"time": time,
 			"name": name,
 			"app": appName,
-			"slot": slot
+			"slot": slotData.idx,
+			"isSelected": slotData.isSelected,
+			"isOnAir": slotData.isOnAir
 		}
+	}
+
+	function updateSlotsState(streams) {
+		jQuery.each(streams, function(streamURL, stream) {
+			var container = getPlayerContainerByURL(streamURL);
+			if(container.length === 0)
+				return;
+			if(stream.isSelected)
+				container.addClass('selected');
+			else
+				container.removeClass('selected');
+			if(stream.isOnAir)
+				container.addClass('onair');
+			else
+				container.removeClass('onair');
+		});
 	}
 
 	function closeInactivePlayers(newStreams) {
@@ -372,7 +393,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 		if(container.length === 0)
 			return;
 		removePlayer({container: container, player: Players[streamURL]});
-		container.removeData("bcme-msp-stream-url");
+		clearContainer(container);
 		delete Players[streamURL];
 		var data = {"container": container, "stream": {"name": ""}};
 		setStreamTitle(data);
@@ -380,6 +401,12 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 		var zoneInfo = config.Zones[slot.zone];
 		if(zoneInfo && zoneInfo.BackgroundStream)
 				startBackgroundPlayer({slotIdx: idx, container: container, stream: zoneInfo.BackgroundStream});
+	}
+
+	function clearContainer(container) {
+		container.removeData("bcme-msp-stream-url");
+		container.removeClass('selected');
+		container.removeClass('onair');
 	}
 
 	function startBackgroundPlayer(params) {
@@ -510,10 +537,13 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 		var data = evt.data;
 		var stream = data.stream;
 		var sharingConfig = config.Client.Sharing;
-		if(sharingConfig === undefined)
+		if(sharingConfig == undefined)
 			return;
-		var controlUrl = sharingConfig.ControlURL;
 		var commonApp = sharingConfig.CommonApp;
+		var serverConfig = config.Servers[stream.server];
+		if(serverConfig == undefined || serverConfig.ControlURL == undefined)
+			return;
+		var controlUrl = serverConfig.ControlURL;
 		var streamName = stream.name;
 		var streamApp = stream.app;
 		$.get(controlUrl + '/redirect/publisher?app=' + streamApp + '&name=' + streamName + '&newname=' + streamName + "@" + commonApp);
@@ -522,10 +552,10 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	function unShareStream(evt) {
 		var data = evt.data;
 		var stream = data.stream;
-		var sharingConfig = config.Client.Sharing;
-		if(sharingConfig === undefined)
+		var serverConfig = config.Servers[stream.server];
+		if(serverConfig == undefined || serverConfig.ControlURL == undefined)
 			return;
-		var controlUrl = sharingConfig.ControlURL;
+		var controlUrl = serverConfig.ControlURL;
 		var streamName = stream.name;
 		var streamApp = stream.app;
 		$.get(controlUrl + '/redirect/publisher?app=' + streamApp + '&name=' + streamName + '&newname=' + streamName.replace(/\@.+$/, ''));

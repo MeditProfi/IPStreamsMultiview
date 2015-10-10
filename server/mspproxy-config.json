@@ -18,6 +18,7 @@
     },
     "test.rtmp.meditprofi.clustertech.ru" : {
       "Stat" : "/stat",
+      "ControlURL" : "/rtmp_control",
       "Apps" : {
         "common" : {
           "Zone" : "Pool",
@@ -79,7 +80,6 @@
     "StreamsInfoAddr" : "/mvw/stat",
     "DefaultStreamerAddr" : "192.168.181.39",
     "Sharing" : {
-      "ControlURL" : "/rtmp_control",
       "CommonApp" : "common",
       "Label" : "МСК"
     }

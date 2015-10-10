@@ -48,10 +48,14 @@ sub run {
         while($req = new CGI::Fast) {
 		my $output;
 		eval {
-			my $action = $req->url_param('action') // '';
+			my $action = $req->param('action') // $req->url_param('action') // '';
 			my $output;
 			if($action eq 'publish') {
 				$output = process_rtmp_onpublish_request($req);
+			} elsif($action eq 'select') {
+				$output = process_inputs_select_request($req);
+			} elsif($action eq 'onair') {
+				$output = process_inputs_onair_request($req);
 			} else {
 				$output = process_rtmp_data_request($req);
 			}
@@ -79,6 +83,20 @@ sub process_rtmp_onpublish_request {
 	return $req->redirect(-uri => "$tcurl/$name", -status=>'301 Moved Permanently');
 }
 
+sub process_inputs_select_request {
+	my $req = shift;
+	my @selected_slots = $req->param('slot');
+	$DB{selected_slots} = { map { $_ => 1} @selected_slots };
+	return success_header('text/plain') . "OK";
+}
+
+sub process_inputs_onair_request {
+	my $req = shift;
+	my @onair_slots = $req->param('slot');
+	$DB{onair_slots} = { map { $_ => 1} @onair_slots };
+	return success_header('text/plain') . "OK";
+}
+
 sub process_rtmp_data_request {
 	my $req = shift;
 	get_params($req);
@@ -97,7 +115,9 @@ sub get_params {
 }
 
 sub success_header {
-	return header(-type => 'text/xml',
+	my $type = shift //
+		'text/xml';
+	return header(-type => $type,
 			-exprires => 'now',
 			-charset => 'utf-8',
 	);
@@ -153,7 +173,12 @@ sub _assign_stream_slots {
 	for my $stream_name (keys %$app) {
 		my $slot = $DB{streams}{"$srv_addr/$app_id/$stream_name"} //
 			_assign_new_slot({srv => $srv_addr, app => $app_id, stream => $stream_name});
-		push @{$app->{$stream_name}}, {tag_name => 'slot', content => [ $slot ]};
+		my %slot_node = (tag_name => 'slot', content => [ $slot ], attrib => {});
+		$slot_node{attrib}{selected} = 1
+			if $DB{selected_slots} and $DB{selected_slots}->{$slot};
+		$slot_node{attrib}{onair} = 1
+			if $DB{onair_slots} and $DB{onair_slots}->{$slot};
+		push @{$app->{$stream_name}}, \%slot_node;
 	}
 }
 
