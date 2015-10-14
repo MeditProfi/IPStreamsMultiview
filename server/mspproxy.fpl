@@ -9,6 +9,7 @@ use Fcntl;
 use JSON::XS;
 use URI::Escape;
 use FindBin qw($Bin);
+use IO::Socket;
 
 use MLDBM::Sync;
 use MLDBM qw(MLDBM::Sync::SDBM_File Storable);
@@ -79,7 +80,13 @@ sub process_rtmp_onpublish_request {
 	my $new_app = $1;
 	my $app = $req->param('app');
 	my $tcurl = $req->param('tcurl');
-	$tcurl =~ s|/$app$|/$new_app|;
+
+	$tcurl =~ m"rtmp://(.+?)(?:\:.+)?/";
+	my $addr_name = $1;
+	my $addr_ip = inet_ntoa(inet_aton($addr_name));
+	$tcurl =~ s|$addr_name|$addr_ip|;
+	$tcurl =~ s/\/$//;
+	$tcurl =~ s"/$app(\?|$)"/$new_app$1";
 	return $req->redirect(-uri => "$tcurl/$name", -status=>'301 Moved Permanently');
 }
 
