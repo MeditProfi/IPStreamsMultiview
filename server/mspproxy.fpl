@@ -208,7 +208,8 @@ sub _get_explicit_slot {
 	my $streams_map = $CONFIG{Servers}{$key->{srv}}{Apps}{$key->{app}}{Streams};
 	return undef
 		unless $streams_map;
-	return $streams_map->{$key->{stream}};
+	(my $stream_key = $key->{stream}) =~ s/\@.+$//;
+	return $streams_map->{$stream_key};
 }
 
 sub _get_next_free_slot {

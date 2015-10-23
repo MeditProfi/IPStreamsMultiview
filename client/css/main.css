@@ -6,9 +6,9 @@ body.table-view { padding: 5px; background-color: white; }
 body.table-view #msp-container { font: 20px tahoma; letter-spacing: 1px; background-color: white; text-align: left; }
 .not-authorized-banner { font-size: 20px; width: 100%; text-align: center }
 .player-container { width: 480px; height: 346px; background-image: url('../img/mv.png'); background-repeat: no-repeat; float: left; }
-.player-container { box-sizing: border-box }
+.player-container object { box-sizing: border-box }
 .player-container.selected { background-image: url('../img/mv-selected.png') }
-.player-container.selected object { border: 4px solid yellow }
+.player-container.selected object { border: 4px solid #00AA00 }
 .player-container.onair { background-image: url('../img/mv-onair.png') }
 .player-container.onair object { border: 4px solid red }
 .player-container.onair.selected { background-image: url('../img/mv-selected-onair.png') }

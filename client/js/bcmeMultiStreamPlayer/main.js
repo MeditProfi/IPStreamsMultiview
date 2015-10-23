@@ -230,7 +230,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	}
 
 	function shouldShowStream(stream) {
-		return (stream.isRedirected || config.Zones[stream.zone] === undefined) ? 0 : 1;
+		return (config.Zones[stream.zone] === undefined) ? 0 : 1;
 	}
 
 	function createStreamLinkElement(stream) {
@@ -330,6 +330,10 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 				container.addClass('onair');
 			else
 				container.removeClass('onair');
+			if(stream.isRedirected)
+				container.addClass('shared');
+			else
+				container.removeClass('shared');
 		});
 	}
 
@@ -407,6 +411,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 		container.removeData("bcme-msp-stream-url");
 		container.removeClass('selected');
 		container.removeClass('onair');
+		container.removeClass('shared');
 	}
 
 	function startBackgroundPlayer(params) {
