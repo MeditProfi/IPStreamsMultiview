@@ -57,6 +57,8 @@ sub run {
 				$output = process_inputs_select_request($req);
 			} elsif($action eq 'onair') {
 				$output = process_inputs_onair_request($req);
+			} elsif($action eq 'refresh_slots_data') {
+				$output = refresh_slots_data($req);
 			} else {
 				$output = process_rtmp_data_request($req);
 			}
@@ -101,6 +103,13 @@ sub process_inputs_onair_request {
 	my $req = shift;
 	my @onair_slots = $req->param('slot');
 	$DB{onair_slots} = { map { $_ => 1} @onair_slots };
+	return success_header('text/plain') . "OK";
+}
+
+sub refresh_slots_data {
+	my $req = shift;
+	$DB{streams} = {};
+	$DB{busy_slots} = {};
 	return success_header('text/plain') . "OK";
 }
 
