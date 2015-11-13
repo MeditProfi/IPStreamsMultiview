@@ -516,7 +516,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 			return;
 		var shareData = {};
 		var originalStream;
-		if(appConfig.Shareable)
+		if(appConfig.Shareable && !stream.isRedirected)
 			shareData = {operation: shareStream, label: '+ ' + sharingConfig.Label, stream: stream}
 		else if(sharingConfig.CommonApp === stream.app && (originalStream = getOriginalStream(stream)))
 			shareData = {operation: unShareStream, label: '- ' + sharingConfig.Label, stream: originalStream}
