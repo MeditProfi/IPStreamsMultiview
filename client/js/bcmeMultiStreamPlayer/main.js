@@ -134,6 +134,11 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 				'<div class="stream-title"></div>' +
 			'</div>');
 		ComponentContainer.append(playerContainer);
+		var inBankIdx = idx % 4;
+		if(inBankIdx === 0)
+			playerContainer.addClass('first-in-bank');
+		else if(inBankIdx === 3)
+			playerContainer.addClass('last-in-bank');
 		if(!(Slots[idx] && config.Zones[Slots[idx].zone]))
 			return;
 		var zoneInfo = config.Zones[Slots[idx].zone];
