@@ -4,13 +4,11 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	var STREAMS_NUMBER = 12;
 	var DEFAULT_PAGE = 1;
 	var DEFAULT_PAGES_NUMBER = 1;
-	var DEFAULT_UPDATE_INTERVAL = 2;
 	var DEFAULT_FULLSCREEN_RESOLUTION_X = 1920;
 	var DEFAULT_FULLSCREEN_RESOLUTION_Y = 1080;
 
 	var Token;
 	var ComponentContainer;
-	var RequestInProgress = false;
 	var Players = {};
 	var BackgroundPlayers = {};
 	var Streams = {};
@@ -130,6 +128,7 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 	function addPlayerContainer(idx) {
 		var playerContainer = $('<div class="player-container">' +
 				'<div id="player' + Math.floor(Math.random() * 1000000) + '"></div>' +
+				'<div class="border"></div>' +
 				'<div class="stream-info"></div>' +
 				'<div class="stream-title"></div>' +
 			'</div>');
@@ -150,29 +149,19 @@ define(["jquery", "jquery.cookie", "purl", "json!app/config.json?t=" + (new Date
 			startBackgroundPlayer({slotIdx: idx, container: playerContainer, stream: zoneInfo.BackgroundStream});
 	}
 
-	function startUpdating() { setInterval(getStreamsInfo, (config.Client.UpdateInterval || DEFAULT_UPDATE_INTERVAL) * 1000) }
-
-	function getStreamsInfo() {
-		if(RequestInProgress)
-			return
-		RequestInProgress = true;
-		$.ajax(config.Client.StreamsInfoAddr, {
-				error: printUpdateErrors,
-				success: updateStreams,
-				complete: function() { RequestInProgress = false },
-				dataType: "xml"
-		});
+	function startUpdating() {
+		var websocket = new WebSocket('ws://' + window.location.hostname + config.Client.StreamsInfoAddr);
+		websocket.onmessage = updateStreams;
+		websocket.onopen = function(evt) { websocket.send('info') };
+		websocket.onclose = function(evt) {
+			console.log("Connection closed: " + evt.code + (evt.reason ? " (" + evt.reason+ ")" : ""))
+			setTimeout(startUpdating, 5000);
+		};
+		websocket.onerror = function(evt) { console.log("Websocket error") };
 	}
 
-	function printUpdateErrors(xhr, statusText, error) {
-		var errorString = (xhr.status === 200)  ?
-			statusText + " (" + error + ")" :
-			xhr.status + " (" + xhr.statusText + ")";
-		console.log("Streams info update failed: " + errorString);
-	}
-
-	function updateStreams(data) {
-		var streams = parseStreamsInfo(data);
+	function updateStreams(evt) {
+		var streams = parseStreamsInfo(evt.data);
 		if(isMultiscreenMode())
 			updatePlayers(streams);
 		else if(isTableMode())

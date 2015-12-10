@@ -83,5 +83,9 @@
       "CommonApp" : "common",
       "Label" : "МСК"
     }
+  },
+  "MVWServer" : {
+    "Listen" : ["http://*:3000"],
+    "ClientUpdateInterval" : 2
   }
 }

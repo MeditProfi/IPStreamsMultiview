@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<title>WebSocket Test</title>
+<script language="javascript" type="text/javascript">
+	websocket = new WebSocket('ws://localhost/websockets/stat');
+	websocket.onopen = function(evt) {
+		console.log('opened');
+		websocket.send('info');
+	};
+	websocket.onclose = function(evt) { console.log('closed') };
+	websocket.onmessage = function(evt) {
+		console.log('message=' + evt.data);
+	};
+	websocket.onerror = function(evt) { console.log('error') };
+</script>
+<h2>WebSocket Test</h2>

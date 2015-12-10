@@ -1,0 +1,9 @@
+requires 'local::lib', '2.000014';
+requires 'Modern::Perl', '1.20140107';
+requires 'Mojolicious', '5.61';
+requires 'Mojo::IOLoop';
+requires 'XML::Ximple';
+requires 'URI::Escape';
+requires 'MLDBM';
+requires 'MLDBM::Sync';
+requires 'pp';
