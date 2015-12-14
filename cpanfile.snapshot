@@ -31,43 +31,6 @@ DISTRIBUTIONS
       Test::More 0.88
       Time::Local 0
       perl 5.006
-  CPAN-Meta-2.150005
-    pathname: D/DA/DAGOLDEN/CPAN-Meta-2.150005.tar.gz
-    provides:
-      CPAN::Meta 2.150005
-      CPAN::Meta::Converter 2.150005
-      CPAN::Meta::Feature 2.150005
-      CPAN::Meta::History 2.150005
-      CPAN::Meta::Merge 2.150005
-      CPAN::Meta::Prereqs 2.150005
-      CPAN::Meta::Spec 2.150005
-      CPAN::Meta::Validator 2.150005
-    requirements:
-      CPAN::Meta::Requirements 2.121
-      CPAN::Meta::YAML 0.008
-      Carp 0
-      ExtUtils::MakeMaker 6.17
-      JSON::PP 2.27200
-      Parse::CPAN::Meta 1.4414
-      Scalar::Util 0
-      perl 5.008
-      strict 0
-      version 0.88
-      warnings 0
-  CPAN-Meta-YAML-0.016
-    pathname: D/DA/DAGOLDEN/CPAN-Meta-YAML-0.016.tar.gz
-    provides:
-      CPAN::Meta::YAML 0.016
-    requirements:
-      B 0
-      Carp 0
-      Exporter 0
-      ExtUtils::MakeMaker 6.17
-      Fcntl 0
-      Scalar::Util 0
-      perl 5.008001
-      strict 0
-      warnings 0
   Encode-Locale-1.05
     pathname: G/GA/GAAS/Encode-Locale-1.05.tar.gz
     provides:
@@ -270,7 +233,7 @@ DISTRIBUTIONS
     pathname: C/CH/CHORNY/MLDBM-2.05.tar.gz
     provides:
       MLDBM 2.05
-      MLDBM::Serializer undef
+      MLDBM::Serializer 2.05
       MLDBM::Serializer::Data::Dumper undef
       MLDBM::Serializer::FreezeThaw undef
       MLDBM::Serializer::Storable undef
@@ -296,62 +259,13 @@ DISTRIBUTIONS
       IO::File 0
       IO::Handle 0
       Module::Build 0.28
+      Test::More 0.98
       autodie 2.22
       feature 0
       mro 0
       perl 5.010
       strict 0
       warnings 0
-  Module-Build-0.4214
-    pathname: L/LE/LEONT/Module-Build-0.4214.tar.gz
-    provides:
-      Module::Build 0.4214
-      Module::Build::Base 0.4214
-      Module::Build::Compat 0.4214
-      Module::Build::Config 0.4214
-      Module::Build::Cookbook 0.4214
-      Module::Build::Dumper 0.4214
-      Module::Build::Notes 0.4214
-      Module::Build::PPMMaker 0.4214
-      Module::Build::Platform::Default 0.4214
-      Module::Build::Platform::MacOS 0.4214
-      Module::Build::Platform::Unix 0.4214
-      Module::Build::Platform::VMS 0.4214
-      Module::Build::Platform::VOS 0.4214
-      Module::Build::Platform::Windows 0.4214
-      Module::Build::Platform::aix 0.4214
-      Module::Build::Platform::cygwin 0.4214
-      Module::Build::Platform::darwin 0.4214
-      Module::Build::Platform::os2 0.4214
-      Module::Build::PodParser 0.4214
-    requirements:
-      CPAN::Meta 2.142060
-      CPAN::Meta::YAML 0.003
-      Cwd 0
-      Data::Dumper 0
-      ExtUtils::CBuilder 0.27
-      ExtUtils::Install 0
-      ExtUtils::Manifest 0
-      ExtUtils::Mkbootstrap 0
-      ExtUtils::ParseXS 2.21
-      File::Basename 0
-      File::Compare 0
-      File::Copy 0
-      File::Find 0
-      File::Path 0
-      File::Spec 0.82
-      File::Temp 0.15
-      Getopt::Long 0
-      Module::Metadata 1.000002
-      Parse::CPAN::Meta 1.4401
-      Perl::OSType 1
-      Pod::Man 2.17
-      Test::Harness 3.16
-      Test::More 0.49
-      Text::Abbrev 0
-      Text::ParseWords 0
-      perl 5.008000
-      version 0.87
   Module-ScanDeps-1.20
     pathname: R/RS/RSCHUPP/Module-ScanDeps-1.20.tar.gz
     provides:
@@ -482,21 +396,6 @@ DISTRIBUTIONS
       JSON::PP 2.27103
       Pod::Simple 3.09
       Time::Local 1.2
-  Mojolicious-Plugin-I18N-1.6
-    pathname: S/SH/SHARIFULN/Mojolicious-Plugin-I18N-1.6.tar.gz
-    provides:
-      App undef
-      App::I18N undef
-      App::I18N::en undef
-      App::I18N::ru undef
-      Mojolicious::Plugin::I18N 1.6
-      Mojolicious::Plugin::I18N::_Handler 1.6
-    requirements:
-      I18N::LangTags 0.35
-      Module::Build 0.42
-      Mojolicious 5
-      Test::More 0
-      perl 5.010001
   Net-HTTP-6.09
     pathname: E/ET/ETHER/Net-HTTP-6.09.tar.gz
     provides:
@@ -563,25 +462,12 @@ DISTRIBUTIONS
       PAR::Dist 0.22
       Text::ParseWords 0
       perl 5.008001
-  Parse-CPAN-Meta-1.4417
-    pathname: D/DA/DAGOLDEN/Parse-CPAN-Meta-1.4417.tar.gz
-    provides:
-      Parse::CPAN::Meta 1.4417
-    requirements:
-      CPAN::Meta::YAML 0.011
-      Carp 0
-      Encode 0
-      Exporter 0
-      ExtUtils::MakeMaker 0
-      File::Spec 0.80
-      JSON::PP 2.27200
-      perl 5.008001
-      strict 0
   SUPER-1.20141117
     pathname: C/CH/CHROMATIC/SUPER-1.20141117.tar.gz
     provides:
       SUPER 1.20141117
     requirements:
+      ExtUtils::MakeMaker 0
       Scalar::Util 1.20
       Sub::Identify 0.03
       Test::Simple 0.61

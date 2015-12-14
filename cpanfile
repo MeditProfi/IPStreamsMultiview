@@ -5,5 +5,6 @@ requires 'Mojo::IOLoop';
 requires 'XML::Ximple';
 requires 'URI::Escape';
 requires 'MLDBM';
+requires 'MLDBM::Serializer::Storable';
 requires 'MLDBM::Sync';
 requires 'pp';
