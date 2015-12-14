@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+#
+# mvw-server
+#
+# chkconfig: - 64 36
+# description: Multivew backend server 
+# processname: mvw-server
+
+PROGRAMROOT=/srv/www/multiview/server
+PROGRAMNAME=mvw-server
+PRODUCT="Multiview backend server"
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+check() {
+        # Check that we're a privileged user
+        [ `id -u` = 0 ] || exit 4
+}
+
+start_mvw_server() {
+    check
+    echo -n "Starting ${PRODUCT}"
+    su -s /bin/sh -c "MOJO_MODE=production /srv/www/multiview/server/mvw-server >/dev/null 2>&1" nginx & 
+    sleep 2
+    [ -f "${PROGRAMROOT}/${PROGRAMNAME}.pid" ] && kill -0 `cat "${PROGRAMROOT}/${PROGRAMNAME}.pid"`
+    retval=$?
+    if [ $retval -eq 0 ]; then
+        success
+    else
+        failure
+    fi
+    echo
+    return $retval
+}
+
+stop_mvw_server() {
+    check
+    echo -n "Shutting down ${PRODUCT}"
+    [ -f "${PROGRAMROOT}/${PROGRAMNAME}.pid" ] && kill -3 `cat "${PROGRAMROOT}/${PROGRAMNAME}.pid"`
+    retval=$?
+    if [ $retval -eq 0 ]; then
+        success
+    else
+        failure
+    fi
+    echo
+    return $retval
+}
+
+status_mvw_server() {
+    echo -n "Checking ${PRODUCT} status:"
+    [ -f "${PROGRAMROOT}/${PROGRAMNAME}.pid" ] && kill -0 `cat "${PROGRAMROOT}/${PROGRAMNAME}.pid"`
+    retval=$?
+    if [ $retval -eq 0 ]; then
+        success
+        echo
+        return 1;
+    fi
+    failure
+    echo
+    return 0;
+}
+script_result=0
+case "$1" in
+        start)
+                start_mvw_server
+        ;;
+        stop)
+                stop_mvw_server
+        ;;
+        reload)
+                start_mvw_server
+        ;;
+        status)
+                status_mvw_server
+                script_result=$?
+        ;;
+        *)
+                echo "Usage: $0 {start|stop|reload|status}"
+                exit 1
+        ;;
+esac
+exit $script_result
