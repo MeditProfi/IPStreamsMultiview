@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use utf8;
 
-use FindBin qw($Bin);
+use FindBin qw($Bin $Script);
 use File::Spec;
 BEGIN {
 	if ($ENV{'PAR_TEMP'}) {
@@ -34,7 +34,9 @@ init_db();
 init_call_map();
 init_loop();
 
-Mojo::Server::Prefork->new(app => app, listen => app->config->{MVWServer}{Listen})->run;
+my $server = Mojo::Server::Prefork->new(app => app, listen => app->config->{MVWServer}{Listen});
+$server->pid_file("$Bin/$Script.pid");
+$server->run;
 
 sub init_app {
 	plugin('JSONConfig', {file => "$Bin/mvw-server.json"});
