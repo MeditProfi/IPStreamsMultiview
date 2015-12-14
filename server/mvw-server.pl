@@ -60,16 +60,16 @@ sub init_call_map {
 		my $self = shift;
 		return $self->render(text => rtmp_info(), format => 'xml');
 	};
-	get '/refresh_slots_data' => sub {
+	any '/refresh_slots_data' => sub {
 		refresh_slots_data(@_);
 	};
-	get '/onair' => sub {
+	any '/onair' => sub {
 		process_inputs_onair_request(@_);
 	};
-	get '/select' => sub {
+	any '/select' => sub {
 		process_inputs_select_request(@_);
 	};
-	get '/publish' => sub {
+	any '/publish' => sub {
 		process_rtmp_onpublish_request(@_);
 	};
 }
