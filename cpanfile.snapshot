@@ -233,7 +233,7 @@ DISTRIBUTIONS
     pathname: C/CH/CHORNY/MLDBM-2.05.tar.gz
     provides:
       MLDBM 2.05
-      MLDBM::Serializer 2.05
+      MLDBM::Serializer undef
       MLDBM::Serializer::Data::Dumper undef
       MLDBM::Serializer::FreezeThaw undef
       MLDBM::Serializer::Storable undef
@@ -259,7 +259,6 @@ DISTRIBUTIONS
       IO::File 0
       IO::Handle 0
       Module::Build 0.28
-      Test::More 0.98
       autodie 2.22
       feature 0
       mro 0
@@ -396,6 +395,7 @@ DISTRIBUTIONS
       JSON::PP 2.27103
       Pod::Simple 3.09
       Time::Local 1.2
+      perl 5.010001
   Net-HTTP-6.09
     pathname: E/ET/ETHER/Net-HTTP-6.09.tar.gz
     provides:
@@ -467,7 +467,6 @@ DISTRIBUTIONS
     provides:
       SUPER 1.20141117
     requirements:
-      ExtUtils::MakeMaker 0
       Scalar::Util 1.20
       Sub::Identify 0.03
       Test::Simple 0.61
