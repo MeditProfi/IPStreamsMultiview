@@ -1,6 +1,5 @@
 #!/bin/bash
 
-pp server/mspproxy.fpl -M MLDBM::Serializer::Storable -o server/mspproxy.fpl.bin
 carton exec pp -M Mojolicious::Plugin::HeaderCondition \
 		-M Mojolicious::Plugin::TagHelpers \
 		-M Mojolicious::Plugin::DefaultHelpers \
