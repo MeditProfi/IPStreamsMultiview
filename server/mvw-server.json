@@ -1,37 +1,57 @@
 {
   "Servers" : {
-    "192.168.181.39" : {
-      "Port" : 1935,
+    "192.168.0.1" : {
       "Stat" : "/mvw/stat_raw",
-      "RelayAddr" : "192.168.181.39",
-      "Protocol" : "http",
-      "Timeout" : 1,
       "Apps" : {
-        "pool" : {
-          "Zone" : "Pool"
-        },
         "sdi" : {
-          "Zone" : "Line",
-          "Streams" : { "1" : 1, "2" : 2, "3" : 3, "4" : 4 }
+          "Zone" : "SDI",
+          "Shareable" : true,
+          "NoAuth" : true,
+          "Streams" : {
+            "SDI-1" : 1,
+            "SDI-2" : 2,
+            "SDI-3" : 3,
+            "SDI-4" : 4,
+            "SDI-5" : 5,
+            "SDI-6" : 6,
+            "SDI-7" : 7,
+            "SDI-8" : 8
+          }
         }
       }
     },
-    "test.rtmp.meditprofi.clustertech.ru" : {
-      "Stat" : "/stat",
-      "ControlURL" : "/rtmp_control",
+    "192.168.100.1" : {
+      "Timeout" : "2",
+      "Stat" : "/mvw/stat_raw",
       "Apps" : {
-        "common" : {
+        "pool" : {
           "Zone" : "Pool",
-          "Prefix" : "EXT"
+          "NoAuth" : true
         },
-        "test" : {
-          "Zone" : "SDI",
+        "live" : {
+          "Zone" : "Line",
           "Shareable" : true,
+          "NoAuth" : true,
           "Streams" : {
-            "1" : 1,
-            "2" : 2,
-            "3" : 3,
-            "4" : 4
+            "LN-1" : 13,
+            "LN-2" : 14,
+            "LN-3" : 15,
+            "LN-4" : 16,
+            "LN-5" : 17,
+            "LN-6" : 18,
+            "LN-7" : 19,
+            "LN-8" : 20
+          }
+        },
+        "camtrans" : {
+          "Zone" : "Line",
+          "Shareable" : true,
+          "NoAuth" : true,
+          "Streams" : {
+            "phone-1" : 21,
+            "phone-2" : 22,
+            "phone-3" : 23,
+            "phone-4" : 24
           }
         }
       }
@@ -42,46 +62,53 @@
       "Color" : "#8DD9BF",
       "Class" : "black-text",
       "Slots" : [
-        { "Pos": 1, "Name": "cam-1" },
-        { "Pos": 2, "Name": "cam-2" },
-        { "Pos": 3, "Name": "cam-3" },
-        { "Pos": 4, "Name": "cam-4" }
+        { "Pos": 1, "Name": "SDI-1 (G)" },
+        { "Pos": 2, "Name": "SDI-2 (H)" },
+        { "Pos": 3, "Name": "SDI-3 (J)" },
+        { "Pos": 4, "Name": "SDI-4 (K)" },
+        { "Pos": 5, "Name": "SDI-5 (L)" },
+        { "Pos": 6, "Name": "SDI-6 (;)" },
+        { "Pos": 7, "Name": "SDI-7 (')" },
+        { "Pos": 8, "Name": "SDI-8 (\\)" }
       ]
     },
     "Pool" : {
       "Color" : "#FFDFA8",
       "Class" : "black-text",
       "Slots" : [
-        { "Pos": 5,  "Name": "ext-1"},
-        { "Pos": 6,  "Name": "ext-2"},
-        { "Pos": 7,  "Name": "ext-3"},
-        { "Pos": 8,  "Name": "ext-4"},
-        { "Pos": 9,  "Name": "ext-5"},
-        { "Pos": 10,  "Name": "ext-6"},
-        { "Pos": 11,  "Name": "ext-7"},
-        { "Pos": 12,  "Name": "ext-8"}
+        { "Pos": 9,  "Name": "EXT-1 (A)"},
+        { "Pos": 10,  "Name": "EXT-2 (S)"},
+        { "Pos": 11,  "Name": "EXT-3 (D)"},
+        { "Pos": 12,  "Name": "EXT-4 (F)"}
       ]
     },
     "Line" : {
       "Color" : "#CCCCCC",
       "Class" : "black-text",
       "Slots" : [
-        { "Pos": 13, "Name" : "LN-1" },
-        { "Pos": 14, "Name" : "LN-2" }
-      ],
-      "BackgroundStream" : {
-        "url" : "test.rtmp.meditprofi.clustertech.ru:1935/test",
-        "name" : "1"
-      }
+        { "Pos": 13, "Name" : "LN-1 (Q)" },
+        { "Pos": 14, "Name" : "LN-2 (W)" },
+        { "Pos": 15, "Name" : "LN-3 (E)" },
+        { "Pos": 16, "Name" : "LN-4 (R)" },
+        { "Pos": 17, "Name" : "LN-5 (T)" },
+        { "Pos": 18, "Name" : "LN-6 (Y)" },
+        { "Pos": 19, "Name" : "LN-7 (U)" },
+        { "Pos": 20, "Name" : "LN-8 (I)" },
+        { "Pos": 21, "Name" : "PHONE-1 (O)" },
+        { "Pos": 22, "Name" : "PHONE-2 (P)" },
+        { "Pos": 23, "Name" : "PHONE-3 ([)" },
+        { "Pos": 24, "Name" : "PHONE-4 (])" }
+      ]
     }
   },
   "Client" : {
     "PagesNumber" : 2,
-    "StreamsInfoAddr" : "/websockets/stat",
-    "DefaultStreamerAddr" : "192.168.181.39",
+    "StreamsInfoAddr" : "/mvw/stat",
+    "UpdateInterval" : 2,
+    "DefaultStreamerAddr" : "192.168.0.1",
     "Sharing" : {
-      "CommonApp" : "common",
-      "Label" : "МСК"
+      "CommonApp" : "pool",
+      "Label" : "MSK"
     }
   },
   "MVWServer" : {
