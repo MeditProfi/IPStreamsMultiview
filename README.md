@@ -24,6 +24,8 @@ The client part gets its config from http-request, the server part gets its conf
 * Pavel Tolstov ([@ray66rus](https://github.com/ray66rus))
 * Iakov Pustilnik ([@yapus](https://github.com/yapus))
 
+IP-streams Multiview is distributed under the GNU General Public License GPLv3 or higher.
+
 ## Third-party software
-* [JWPlayer](http://www.jwplayer.com/). We use JWPlayer version 5 beacause it doesn't require internet connection.
-* [nginx](http://nginx.org/) web-server with [nginx-rtmp-module](https://github.com/arut/nginx-rtmp-module). We use nginx-v1.8.0 and nginx-rtmp-module-revf62a083.
+* [JWPlayer](http://www.jwplayer.com/). We use JWPlayer version 5 beacause it doesn't require internet connection. JWPlayer is licensed under a Creative Commons License. It allows you to use, modify and redistribute the script, but only for non-commercial purposes. If you want to use this software for commercial purposes you should buy a license.
+* [nginx](http://nginx.org/) web-server with [nginx-rtmp-module](https://github.com/arut/nginx-rtmp-module). We use nginx-v1.8.0 and nginx-rtmp-module-revf62a083. nginx is distributed under the [2-clause BSD-like license](http://nginx.org/LICENSE).
